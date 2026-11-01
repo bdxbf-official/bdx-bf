@@ -1,239 +1,55 @@
 
-<!DOCTYPE html>
-<html lang="id">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BDX BF | Canary Database</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#090909;color:#eee;font-family:Arial,sans-serif}
-header{text-align:center;padding:28px 15px;background:linear-gradient(135deg,#080808,#29200b);border-bottom:2px solid #c99b32}
-.logo{font-size:34px;font-weight:900;color:#e7bd54;letter-spacing:4px}
-header p{color:#c7a75b;letter-spacing:2px;font-size:12px}
-.hero{text-align:center;padding:35px 15px}
-.hero h1{color:#e8bd52;font-size:27px}
-.hero p{color:#aaa}
-main{max-width:720px;margin:auto;padding:15px}
-.panel{background:#171717;border:1px solid #806322;border-radius:12px;padding:20px;margin:18px 0}
-h2{color:#e7bd54;font-size:19px}
-input,select{width:100%;padding:13px;margin:7px 0;background:#090909;color:white;border:1px solid #66501f;border-radius:7px}
-button{padding:12px 17px;border:0;border-radius:7px;background:#d4aa43;color:#111;font-weight:bold;margin:5px 3px;cursor:pointer}
-button.secondary{background:#333;color:white}
-button.danger{background:#8e2929;color:white}
-.result{border-left:3px solid #d4aa43;padding:12px;margin-top:15px;background:#101010}
-.result p{color:#ddd;line-height:1.6}
-small{color:#aaa}
-.hidden{display:none}
-footer{text-align:center;padding:25px;color:#8e783f;font-size:12px}
-</style>
-</head>
-<body>
-<header>
- <div class="logo">♛ BDX BF</div>
- <p>QUALITY BLOODLINE, PROVEN IDENTITY</p>
-</header>
-<section class="hero">
- <h1>DATABASE KENARI BDX BF</h1>
- <p>Periksa identitas dan silsilah kenari berdasarkan kode ring.</p>
-</section>
-<main>
- <section class="panel">
-  <h2>🔎 CEK KODE RING</h2>
-  <input id="searchCode" placeholder="Masukkan kode ring, contoh BDX-001">
-  <button onclick="searchBird()">CARI DATA</button>
-  <div id="searchResult"></div>
- </section>
-
- <section class="panel">
-  <h2>🔐 LOGIN ADMIN</h2>
-  <div id="loginArea">
-   <input id="email" type="email" placeholder="Email admin">
-   <input id="password" type="password" placeholder="Password admin">
-   <button onclick="login()">LOGIN</button>
-  </div>
-  <div id="adminArea" class="hidden">
-   <p>Admin berhasil masuk.</p>
-   <button class="secondary" onclick="logout()">LOGOUT</button>
-   <h2>➕ TAMBAH / EDIT DATA</h2>
-   <input id="kode" placeholder="Kode ring (unik)">
-   <input id="pejantan" placeholder="Seri pejantan">
-   <input id="indukan" placeholder="Seri indukan">
-   <input id="anakan" placeholder="Seri anakan">
-   <label>Tanggal lahir</label>
-   <input id="tanggal" type="date">
-   <select id="kelamin">
-    <option value="">Pilih jenis kelamin</option>
-    <option>Jantan</option>
-    <option>Betina</option>
-   </select>
-   <input id="warna" placeholder="Warna kenari">
-   <button onclick="saveBird()">SIMPAN DATA</button>
-   <button class="secondary" onclick="clearForm()">KOSONGKAN</button>
-   <div id="adminMessage"></div>
-   <h2>DAFTAR DATA</h2>
-   <div id="birdList"></div>
-  </div>
- </section>
-</main>
-<footer>© BDX BF — BLACK & GOLD EDITION<br>Kenari Berkualitas dari BDX BF</footer>
-
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-<script>
-const firebaseConfig = {
- apiKey: "AIzaSyABDBlDdKGUSLg0AezU1ajSsiD6TmsAwE",
- authDomain: "bdx-bf-e8364.firebaseapp.com",
- projectId: "bdx-bf-e8364",
- storageBucket: "bdx-bf-e8364.firebasestorage.app",
- messagingSenderId: "962557937504",
- appId: "1:962557937504:web:2acb1250cdf32542e54005",
- measurementId: "G-QWXBFL63D4"
-};
-
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
-const collection = db.collection("kenari");
-
-function safe(value){
- return String(value || "").replace(/[&<>"']/g,c=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
- })[c]);
-}
 
 async function searchBird(){
- const code=document.getElementById("searchCode").value.trim().toUpperCase();
- const box=document.getElementById("searchResult");
- if(!code){box.textContent="Masukkan kode ring terlebih dahulu.";return;}
- box.textContent="Mencari data...";
- try{
-  const doc=await collection.doc(code).get();
-  if(!doc.exists){box.textContent="Kode ring tidak ditemukan.";return;}
-  const d=doc.data();
-  box.innerHTML=`<div class="result"><h2>✓ DATA DITEMUKAN</h2>
-  <p><b>Kode ring:</b> ${safe(d.kode_ring)}<br>
-  <b>Seri pejantan:</b> ${safe(d.seri_pejantan)}<br>
-  <b>Seri indukan:</b> ${safe(d.seri_indukan)}<br>
-  <b>Seri anakan:</b> ${safe(d.seri_anakan)}<br>
-  <b>Tanggal lahir:</b> ${safe(d.tanggal_lahir)}<br>
-  <b>Jenis kelamin:</b> ${safe(d.jenis_kelamin)}<br>
-  <b>Warna:</b> ${safe(d.warna)}</p></div>`;
- }catch(e){box.textContent="Gagal mencari data: "+e.message;}
-}
+ const code = document.getElementById("searchCode").value.trim().toUpperCase();
+ const box = document.getElementById("searchResult");
 
-async function login(){
- try{
-  await auth.signInWithEmailAndPassword(
-   document.getElementById("email").value,
-   document.getElementById("password").value
-  );
- }catch(e){alert("Login gagal: "+e.message);}
-}
-
-function logout(){auth.signOut();}
-
-auth.onAuthStateChanged(user=>{
- document.getElementById("loginArea").classList.toggle("hidden",!!user);
- document.getElementById("adminArea").classList.toggle("hidden",!user);
- if(user)loadBirds();
-});
-
-async function saveBird(){
- const code=document.getElementById("kode").value.trim().toUpperCase();
- const data={
-  kode_ring:code,
-  seri_pejantan:document.getElementById("pejantan").value.trim(),
-  seri_indukan:document.getElementById("indukan").value.trim(),
-  seri_anakan:document.getElementById("anakan").value.trim(),
-  tanggal_lahir:document.getElementById("tanggal").value,
-  jenis_kelamin:document.getElementById("kelamin").value,
-  warna:document.getElementById("warna").value.trim()
- };
- if(!code || !data.seri_pejantan || !data.seri_indukan ||
- !data.seri_anakan || !data.tanggal_lahir ||
- !data.jenis_kelamin || !data.warna){
-  alert("Semua kolom wajib diisi.");return;
+ if(!code){
+   box.textContent = "Masukkan kode ring terlebih dahulu.";
+   return;
  }
- try{
-  const ref=collection.doc(code);
-  const old=await ref.get();
-  if(old.exists){alert("Kode ring sudah terdaftar. Gunakan EDIT untuk mengubah data.");return;}
-  await ref.set(data);
-  document.getElementById("adminMessage").textContent="Data berhasil disimpan!";
-  clearForm();loadBirds();
- }catch(e){alert("Gagal menyimpan: "+e.message);}
-}
 
-function clearForm(){
- ["kode","pejantan","indukan","anakan","tanggal","kelamin","warna"]
- .forEach(id=>document.getElementById(id).value="");
-}
+ box.textContent = "Mencari data...";
 
-async function loadBirds(){
- const box=document.getElementById("birdList");
- box.textContent="Memuat data...";
- try{
-  const snap=await collection.orderBy("kode_ring").get();
-  box.innerHTML="";
-  snap.forEach(doc=>{
-   const d=doc.data();
-   const item=document.createElement("div");
-   item.className="result";
-   item.innerHTML=`<b>${safe(d.kode_ring)}</b><br>
-   <small>${safe(d.warna)} · ${safe(d.jenis_kelamin)}</small><br>
-   <button class="secondary" onclick="editBird('${safe(doc.id)}')">EDIT</button>
-   <button class="danger" onclick="deleteBird('${safe(doc.id)}')">HAPUS</button>`;
-   box.appendChild(item);
-  });
-  if(!snap.size)box.textContent="Belum ada data.";
- }catch(e){box.textContent="Gagal memuat: "+e.message;}
-}
+ try {
+   let found = null;
 
-async function editBird(code){
- const doc=await collection.doc(code).get();
- if(!doc.exists)return;
- const d=doc.data();
- document.getElementById("kode").value=d.kode_ring;
- document.getElementById("kode").disabled=true;
- document.getElementById("pejantan").value=d.seri_pejantan;
- document.getElementById("indukan").value=d.seri_indukan;
- document.getElementById("anakan").value=d.seri_anakan;
- document.getElementById("tanggal").value=d.tanggal_lahir;
- document.getElementById("kelamin").value=d.jenis_kelamin;
- document.getElementById("warna").value=d.warna;
- document.getElementById("adminMessage").innerHTML=
- "Mode edit: setelah mengubah data, tekan SIMPAN PERUBAHAN.";
- const btn=document.querySelector("#adminArea button[onclick='saveBird()']");
- btn.textContent="SIMPAN PERUBAHAN";
- btn.onclick=()=>updateBird(code);
-}
+   // Cari berdasarkan Document ID
+   const direct = await collection.doc(code).get();
 
-async function updateBird(code){
- const data={
-  seri_pejantan:document.getElementById("pejantan").value.trim(),
-  seri_indukan:document.getElementById("indukan").value.trim(),
-  seri_anakan:document.getElementById("anakan").value.trim(),
-  tanggal_lahir:document.getElementById("tanggal").value,
-  jenis_kelamin:document.getElementById("kelamin").value,
-  warna:document.getElementById("warna").value.trim()
- };
- try{
-  await collection.doc(code).update(data);
-  document.getElementById("kode").disabled=false;
-  const btn=document.querySelector("#adminArea button[onclick]");
-  clearForm();
-  document.getElementById("adminMessage").textContent="Data diperbarui.";
-  location.reload();
- }catch(e){alert("Gagal mengubah: "+e.message);}
-}
+   if(direct.exists) {
+     found = direct.data();
+   } else {
+     // Jika tidak ditemukan, cari berdasarkan field kode_ring
+     const result = await collection
+       .where("kode_ring", "==", code)
+       .limit(1)
+       .get();
 
-async function deleteBird(code){
- if(!confirm("Yakin ingin menghapus "+code+"?"))return;
- try{await collection.doc(code).delete();loadBirds();}
- catch(e){alert("Gagal menghapus: "+e.message);}
+     if(!result.empty) {
+       found = result.docs[0].data();
+     }
+   }
+
+   if(!found) {
+     box.textContent = "Kode ring tidak ditemukan. Periksa kembali data di Firebase.";
+     return;
+   }
+
+   box.innerHTML = `<div class="result">
+     <h2>✓ DATA DITEMUKAN</h2>
+     <p>
+     <b>Kode ring:</b> ${safe(found.kode_ring)}<br>
+     <b>Seri pejantan:</b> ${safe(found.seri_pejantan)}<br>
+     <b>Seri indukan:</b> ${safe(found.seri_indukan)}<br>
+     <b>Seri anakan:</b> ${safe(found.seri_anakan)}<br>
+     <b>Tanggal lahir:</b> ${safe(found.tanggal_lahir)}<br>
+     <b>Jenis kelamin:</b> ${safe(found.jenis_kelamin)}<br>
+     <b>Warna:</b> ${safe(found.warna)}
+     </p>
+   </div>`;
+
+ } catch(e) {
+   box.textContent = "Gagal mencari data: " + e.message;
+ }
 }
-</script>
-</body>
-</html>
